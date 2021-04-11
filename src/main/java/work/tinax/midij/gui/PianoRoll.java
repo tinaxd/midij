@@ -10,6 +10,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import work.tinax.midij.data.Event;
+import work.tinax.midij.data.EventNote;
 import work.tinax.midij.data.EventVisitor;
 import work.tinax.midij.data.Track;
 
@@ -28,7 +29,11 @@ public class PianoRoll extends Pane {
 			       beatWidth = 75.0;
 	private final double[] scaleHeightCache = new double[128];
 	
-	private Track currentTrack = null;
+	private final EditState editState = new EditState();
+	
+	private Track currentTrack = new Track();
+	
+	private int quantizeUnit = 960/4;
 	
 	public PianoRoll(double width, double height) {
 		super();
@@ -55,6 +60,9 @@ public class PianoRoll extends Pane {
 		});
 		
 		canvas.setOnMouseClicked(new OnMouseClickHandler());
+		canvas.setOnMousePressed(new OnMousePressHandler());
+		canvas.setOnMouseReleased(new OnMouseReleaseHandler());
+		canvas.setOnMouseDragged(new OnMouseDragHandler());
 		canvas.setOnScroll(new OnScrollHandler());
 		
 		clearAndDraw();
@@ -134,7 +142,7 @@ public class PianoRoll extends Pane {
 	
 	private double calculateHCoordFromTick(int absTick) {
 		int resolution = Event.TPQ;
-		return beatWidth * (absTick / (double)resolution);
+		return beatWidth * (absTick / (double)resolution) + whiteWidth - offsetX;
 	}
 	
 	private double calculateVCoordFromScale(int scale) {
@@ -142,8 +150,18 @@ public class PianoRoll extends Pane {
 	}
 
 	private void drawPendingNotes() {
-		// TODO Auto-generated method stub
-		
+		if (editState.isInEdit() && editState.hasEndPosition()) {
+			var drawer = new NoteDrawer(fullNoteDrawBounds());
+			var startX = editState.getMouseStartX();
+			var startY = editState.getMouseStartY();
+			var endX = editState.getMouseEndX();
+			var startTickQ = quantizeTime(calculateTickFromClickPositionX(startX));
+			var endTickQ = quantizeTime(calculateTickFromClickPositionX(endX));
+			var scale = calculateScaleFromClickPositonY(startY);
+			var color = new Color(0.0f, 0.0f, 0.54509807f, 0.6f); // DARKBLUE with transparency
+			gc.setFill(color);
+			drawer.drawNote(scale, startTickQ, endTickQ-startTickQ, fullNoteDrawBounds());
+		}
 	}
 
 	private void drawNotes() {
@@ -151,6 +169,7 @@ public class PianoRoll extends Pane {
 		var events = currentTrack.unmodifiableEvents();
 		var drawer = new NoteDrawer(fullNoteDrawBounds());
 		for (var event : events) {
+			gc.setFill(Color.DARKBLUE);
 			event.visit(drawer);
 			if (drawer.shouldBreak) break;
 		}
@@ -158,8 +177,8 @@ public class PianoRoll extends Pane {
 
 	private NoteDrawBounds fullNoteDrawBounds() {
 		return new NoteDrawBounds(
-				offsetX, offsetX + getWidth(),
-				offsetY, offsetY + getHeight()
+				whiteWidth, whiteWidth + getWidth(),
+				0, getHeight() - scrollBarSize
 				);
 	}
 
@@ -249,7 +268,7 @@ public class PianoRoll extends Pane {
 			}
 		}
 	}
-
+	
 	class OnMouseClickHandler implements EventHandler<MouseEvent> {
 		@Override
 		public void handle(MouseEvent event) {
@@ -265,7 +284,6 @@ public class PianoRoll extends Pane {
 				handleOnScrollBar(event, false);
 				return;
 			}
-			
 		}
 		
 		private void handleOnScrollBar(MouseEvent event, boolean horizontal) {
@@ -276,9 +294,77 @@ public class PianoRoll extends Pane {
 				clearAndDraw();
 			}
 		}
+	}
+
+	class OnMousePressHandler implements EventHandler<MouseEvent> {
+		@Override
+		public void handle(MouseEvent event) {
+			var x = event.getX();
+			var y = event.getY();
+			var width = getWidth();
+			var height = getHeight();
+			if (x > whiteWidth && x < width-scrollBarSize && y > 0 && y < height-scrollBarSize) {
+				handleOnPianoroll(event);
+			}
+		}
 		
 		private void handleOnPianoroll(MouseEvent event) {
-			
+			switch (event.getButton()) {
+			case PRIMARY:
+				handleNewNote(event);
+				break;
+			case SECONDARY:
+				handleDeleteNote(event);
+				break;
+			default:
+			}
+		}
+		
+		private void handleNewNote(MouseEvent event) {
+			var x = event.getX();
+			var y = event.getY();
+			editState.startEdit(x, y);
+		}
+		
+		private void handleDeleteNote(MouseEvent event) {
+			// TODO:
+		}
+	}
+	
+	class OnMouseReleaseHandler implements EventHandler<MouseEvent> {
+		@Override
+		public void handle(MouseEvent event) {
+			if (editState.isInEdit()) {
+				var startX = editState.getMouseStartX();
+				var startY = editState.getMouseStartY();
+				var endX = event.getX();
+				editState.endEdit();
+				newNote(startX, startY, endX);
+			}
+		}
+		
+		private void newNote(double startX, double startY, double endX) {
+			var startTick = calculateTickFromClickPositionX(startX);
+			var endTick = calculateTickFromClickPositionX(endX);
+			var scale = calculateScaleFromClickPositonY(startY);
+			var startTickQuantized = quantizeTime(startTick);
+			var endTickQuantized = quantizeTime(endTick);
+			if (currentTrack != null) {
+				// TODO: velocity
+				currentTrack.addEvent(new EventNote(startTickQuantized, scale, endTickQuantized-startTickQuantized, 100));
+				System.out.println("newNote " + startTickQuantized + " " + endTickQuantized + " " + scale);
+				clearAndDraw();
+			}
+		}
+	}
+	
+	class OnMouseDragHandler implements EventHandler<MouseEvent> {
+		@Override
+		public void handle(MouseEvent event) {
+			if (editState.isInEdit()) {
+				editState.updateMouseEnd(event.getX(), event.getY());
+				clearAndDraw();
+			}
 		}
 	}
 	
@@ -288,6 +374,31 @@ public class PianoRoll extends Pane {
 			double y = event.getDeltaY();
 			offsetY -= y;
 			clearAndDraw();
+		}
+	}
+	
+	private int calculateTickFromClickPositionX(double x) {
+		double absX = offsetX + x - whiteWidth;
+		System.out.println("absX: " + absX);
+		return (int) (absX * Event.TPQ / beatWidth);
+	}
+	
+	private int calculateScaleFromClickPositonY(double y) {
+		for (int i=12; i<128; i++) {
+			var v = scaleHeightCache[i];
+			if (y > v) {
+				return i - 1;
+			}
+		}
+		return -1;
+	}
+	
+	private int quantizeTime(int absTick) {
+		int diff = absTick % quantizeUnit;
+		if (diff > quantizeUnit / 2) {
+			return absTick + quantizeUnit - diff;
+		} else {
+			return absTick - diff;
 		}
 	}
 }
