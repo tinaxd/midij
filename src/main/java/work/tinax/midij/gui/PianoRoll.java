@@ -105,17 +105,17 @@ public class PianoRoll extends Pane {
 		
 		private NoteDrawnPosition drawNote(int scale, int startTick, int duration, NoteDrawBounds bounds) {
 			double endCoord = calculateHCoordFromTick(startTick + duration);
-			if (endCoord < bounds.left) {
+			if (endCoord < bounds.left()) {
 				return NoteDrawnPosition.LEFT;
 			}
 			double startCoord = calculateHCoordFromTick(startTick);
-			if (startCoord > bounds.right) {
+			if (startCoord > bounds.right()) {
 				return NoteDrawnPosition.RIGHT;
 			}
 			double scaleHeight = calculateVCoordFromScale(scale);
-			if (scaleHeight < bounds.upper) {
+			if (scaleHeight < bounds.upper()) {
 				return NoteDrawnPosition.UP;
-			} else if (scaleHeight > bounds.lower) {
+			} else if (scaleHeight > bounds.lower()) {
 				return NoteDrawnPosition.DOWN;
 			}
 			if (startCoord < endCoord) {
@@ -409,12 +409,4 @@ enum NoteDrawnPosition {
 	UP, DOWN, LEFT, RIGHT
 }
 
-class NoteDrawBounds {
-	double left, right, upper, lower;
-	NoteDrawBounds(double left, double right, double upper, double lower) {
-		this.left = left;
-		this.right = right;
-		this.upper = upper;
-		this.lower = lower;
-	}
-}
+record NoteDrawBounds(double left, double right, double upper, double lower) {}
