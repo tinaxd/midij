@@ -3,7 +3,8 @@ package work.tinax.midij.midi;
 public class NoteOn extends MidiEvent {
 	private int scale, velocity;
 	
-	public NoteOn(int scale, int velocity) {
+	public NoteOn(int deltaTime, int scale, int velocity) {
+		super(deltaTime);
 		this.scale = scale;
 		this.velocity = velocity;
 	}

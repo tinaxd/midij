@@ -14,4 +14,10 @@ public class Track {
 	public List<MidiEvent> getUnmodifiableEvents() {
 		return Collections.unmodifiableList(events);
 	}
+	
+	public static Track withSortedEvents(List<? extends MidiEvent> events) {
+		var track = new Track();
+		track.events = new ArrayList<MidiEvent>(events);
+		return track;
+	}
 }

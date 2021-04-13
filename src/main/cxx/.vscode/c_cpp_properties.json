@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/lib/jvm/java-15-openjdk-amd64/include",
+                "/usr/lib/jvm/java-15-openjdk-amd64/include/linux",
+                "/usr/include/rtmidi"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang-11",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}
