@@ -24,7 +24,12 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.0</version>
 				<configuration>
-					<release>11</release>
+					<release>15</release>
+					<compilerArgs>
+						<arg>--enable-preview</arg>
+						<arg>-h</arg>
+						<arg>include</arg>
+					</compilerArgs>
 				</configuration>
 			</plugin>
 			<plugin>
