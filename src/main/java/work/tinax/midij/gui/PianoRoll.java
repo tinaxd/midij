@@ -95,7 +95,7 @@ public class PianoRoll extends Pane {
 		gc.strokeRect(width-scrollBarSize, verticalBoxY, scrollBarSize, verticalBoxSize);
 	}
 	
-	class NoteDrawer implements EventVisitor {
+	class NoteDrawer implements EventVisitor<Boolean> {
 		
 		private NoteDrawBounds bounds;
 
@@ -125,17 +125,16 @@ public class PianoRoll extends Pane {
 				return NoteDrawnPosition.INVALID;
 			}
 		}
-		
-		public boolean shouldBreak = false;
 
 		@Override
-		public void handleNote(Event event, int scale, int duration, int velocity) {
+		public Boolean handleNote(Event event, int scale, int duration, int velocity) {
 			var result = drawNote(scale, event.getAbsTick(), duration, bounds);
-			if (result == NoteDrawnPosition.RIGHT) shouldBreak = true;
+			return result == NoteDrawnPosition.RIGHT;
 		}
 
 		@Override
-		public void handleGMReset(Event event) {
+		public Boolean handleGMReset(Event event) {
+			return true;
 		}
 		
 	}
@@ -170,8 +169,7 @@ public class PianoRoll extends Pane {
 		var drawer = new NoteDrawer(fullNoteDrawBounds());
 		for (var event : events) {
 			gc.setFill(Color.DARKBLUE);
-			event.visit(drawer);
-			if (drawer.shouldBreak) break;
+			if (event.visit(drawer)) break;
 		}
 	}
 

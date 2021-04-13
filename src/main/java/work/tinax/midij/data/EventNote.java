@@ -11,8 +11,8 @@ public class EventNote extends Event {
 	}
 	
 	@Override
-	public void visit(EventVisitor visitor) {
-		visitor.handleNote(this, scale, duration, velocity);
+	public <T> T visit(EventVisitor<T> visitor) {
+		return visitor.handleNote(this, scale, duration, velocity);
 	}
 	
 	@Override

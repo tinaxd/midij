@@ -19,5 +19,5 @@ public abstract class Event {
 		return absTick;
 	}
 	
-	public abstract void visit(EventVisitor visitor);
+	public abstract <T> T visit(EventVisitor<T> visitor);
 }
