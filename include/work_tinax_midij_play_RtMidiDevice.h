@@ -9,10 +9,26 @@ extern "C" {
 #endif
 /*
  * Class:     work_tinax_midij_play_RtMidiDevice
- * Method:    getDeviceNames
- * Signature: ()Ljava/util/List;
+ * Method:    setRtMidiOut
+ * Signature: ()V
  */
-JNIEXPORT jobject JNICALL Java_work_tinax_midij_play_RtMidiDevice_getDeviceNames
+JNIEXPORT void JNICALL Java_work_tinax_midij_play_RtMidiDevice_setRtMidiOut
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     work_tinax_midij_play_RtMidiDevice
+ * Method:    destroyRtMidiOut
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_work_tinax_midij_play_RtMidiDevice_destroyRtMidiOut
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     work_tinax_midij_play_RtMidiDevice
+ * Method:    getDeviceNames
+ * Signature: ()[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_work_tinax_midij_play_RtMidiDevice_getDeviceNames
   (JNIEnv *, jobject);
 
 /*

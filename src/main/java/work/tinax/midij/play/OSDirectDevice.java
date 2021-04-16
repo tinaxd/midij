@@ -1,11 +1,9 @@
 package work.tinax.midij.play;
 
-import java.util.List;
-
 public final class OSDirectDevice extends MidiDevice {
 
 	@Override
-	public native List<String> getDeviceNames();
+	public native String[] getDeviceNames();
 
 	@Override
 	public native void openDevice(String name) throws DeviceOpenException;

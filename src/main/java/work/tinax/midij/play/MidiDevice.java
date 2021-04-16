@@ -3,7 +3,7 @@ package work.tinax.midij.play;
 import java.util.List;
 
 public abstract class MidiDevice {
-	public abstract List<String> getDeviceNames();
+	public abstract String[] getDeviceNames();
 	
 	public abstract void openDevice(String name) throws DeviceOpenException;
 	public abstract void openDevice(int index) throws DeviceOpenException;

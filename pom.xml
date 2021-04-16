@@ -38,6 +38,9 @@
 				<version>0.0.5</version>
 				<configuration>
 					<mainClass>work.tinax.midij/work.tinax.midij.App</mainClass>
+					<options>
+						<option>--enable-preview</option>
+					</options>
 				</configuration>
 				<executions>
 					<execution>

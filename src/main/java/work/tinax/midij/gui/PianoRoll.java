@@ -13,6 +13,9 @@ import work.tinax.midij.data.Event;
 import work.tinax.midij.data.EventNote;
 import work.tinax.midij.data.EventVisitor;
 import work.tinax.midij.data.Track;
+import work.tinax.midij.play.DeviceOpenException;
+import work.tinax.midij.play.RtMidiDevice;
+import work.tinax.midij.play.RtMidiException;
 
 public class PianoRoll extends Pane {
 	public static final int WHITE_KEYS = 69;
@@ -34,6 +37,8 @@ public class PianoRoll extends Pane {
 	private Track currentTrack = new Track();
 	
 	private int quantizeUnit = 960/4;
+	
+	private FeedbackPlayer fbPlayer = null;
 	
 	public PianoRoll(double width, double height) {
 		super();
@@ -66,6 +71,22 @@ public class PianoRoll extends Pane {
 		canvas.setOnScroll(new OnScrollHandler());
 		
 		clearAndDraw();
+		
+		try {
+			var rtmidi = new RtMidiDevice();
+			var devNames = rtmidi.getDeviceNames();
+			System.out.println("Found " + devNames.length + " deviecs:");
+			for (var devName : devNames) {
+				System.out.println("RtMidi device: " + devName);
+			}
+			rtmidi.openDevice(1);
+			fbPlayer = new MidiDeviceFeedbacker(rtmidi);
+			fbPlayer.setChannel(0);
+		} catch (RtMidiException e) {
+			e.printStackTrace();
+		} catch (DeviceOpenException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void clearAndDraw() {
@@ -322,6 +343,9 @@ public class PianoRoll extends Pane {
 			var x = event.getX();
 			var y = event.getY();
 			editState.startEdit(x, y);
+			
+			int scale = calculateScaleFromClickPositonY(y);
+			sendTestNoteOn(scale);
 		}
 		
 		private void handleDeleteNote(MouseEvent event) {
@@ -347,6 +371,7 @@ public class PianoRoll extends Pane {
 			var scale = calculateScaleFromClickPositonY(startY);
 			var startTickQuantized = quantizeTime(startTick);
 			var endTickQuantized = quantizeTime(endTick);
+			sendTestNoteOff(scale);
 			if (currentTrack != null) {
 				// TODO: velocity
 				currentTrack.addEvent(new EventNote(startTickQuantized, scale, endTickQuantized-startTickQuantized, 100));
@@ -377,7 +402,7 @@ public class PianoRoll extends Pane {
 	
 	private int calculateTickFromClickPositionX(double x) {
 		double absX = offsetX + x - whiteWidth;
-		System.out.println("absX: " + absX);
+		//System.out.println("absX: " + absX);
 		return (int) (absX * Event.TPQ / beatWidth);
 	}
 	
@@ -398,6 +423,27 @@ public class PianoRoll extends Pane {
 		} else {
 			return absTick - diff;
 		}
+	}
+
+	public FeedbackPlayer getFeedbackPlayer() {
+		return fbPlayer;
+	}
+
+	public void setFeedbackPlayer(FeedbackPlayer fbPlayer) {
+		if (this.fbPlayer != null) {
+			this.fbPlayer.stopAllNotes();
+		}
+		this.fbPlayer = fbPlayer;
+	}
+	
+	private void sendTestNoteOn(int scale) {
+		if (fbPlayer == null) return;
+		fbPlayer.playNote(scale, 100);
+	}
+	
+	private void sendTestNoteOff(int scale) {
+		if (fbPlayer == null) return;
+		fbPlayer.stopNote(scale);
 	}
 }
 

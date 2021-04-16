@@ -10,9 +10,9 @@ extern "C" {
 /*
  * Class:     work_tinax_midij_play_OSDirectDevice
  * Method:    getDeviceNames
- * Signature: ()Ljava/util/List;
+ * Signature: ()[Ljava/lang/String;
  */
-JNIEXPORT jobject JNICALL Java_work_tinax_midij_play_OSDirectDevice_getDeviceNames
+JNIEXPORT jobjectArray JNICALL Java_work_tinax_midij_play_OSDirectDevice_getDeviceNames
   (JNIEnv *, jobject);
 
 /*
